@@ -12,6 +12,8 @@ require_once 'Controllers\ColaboradoresController.php';
 require_once 'Controllers\DocumentosController.php';
 require_once 'Controllers\LegajoController.php';
 require_once 'Controllers\UsuariosController.php';
+require_once 'Controllers\DashboardController.php';
+
 
 // Configuración de la base de datos
 //$db = new Libs\Database(); // Instancia tu clase de base de datos si es necesario
@@ -24,15 +26,19 @@ $path = rtrim($path, '/');
 $path = ltrim($path, '/'); // Eliminamos la barra inicial
 
 require_once __DIR__ . '/Models/Usuario.php';
+require_once __DIR__ . '/Models/Colaborador.php';
+require_once __DIR__ . '/Models/DocumentoIdentidad.php';
+require_once __DIR__ . '/Models/Documentos.php';
+require_once __DIR__ . '/Models/Legajo.php';
 // Aquí se cargan el resto de tus modelos o librerías manualmente
 
 // Manejar las rutas
 switch ($path) {
     case '':
-        // Redirigir a la ruta de login si no hay ruta
-        header('Location: /login');
-        exit;
-
+        // Mostrar el dashboard si el usuario está autenticado, si no, redirige a login
+        Controllers\DashboardController::index();
+        break;
+    
     case 'login':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Controllers\AuthController::login(); // Llamar al método login del controlador

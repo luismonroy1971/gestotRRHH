@@ -21,15 +21,15 @@ class AuthController
     
             $user = Usuario::findByUsername($username);
     
-            if (!$user || !password_verify($password, $user['contrasena'])) {
+            if (!$user || !password_verify($password, $user['CONTRASENA'])) {
                 header('Location: /login?error=Usuario o contraseña incorrectos');
                 exit;
             }
     
             session_start();
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['nombre_usuario'];
-            $_SESSION['role'] = $user['rol'];
+            $_SESSION['user_id'] = $user['ID'];
+            $_SESSION['username'] = $user['NOMBRE_USUARIO'];
+            $_SESSION['role'] = $user['ROL'];
     
             header('Location: /');
             exit;

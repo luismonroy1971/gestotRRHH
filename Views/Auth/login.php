@@ -35,6 +35,7 @@
 
         .form-group {
             margin-bottom: 1rem;
+            position: relative; /* Para poder posicionar el ícono sobre el input */
         }
 
         .form-group label {
@@ -46,6 +47,7 @@
         .form-group input {
             width: 100%;
             padding: 0.8rem;
+            padding-right: 2.5rem; /* Dejar espacio para el ícono */
             border: 1px solid #ddd;
             border-radius: 5px;
             box-sizing: border-box;
@@ -54,6 +56,22 @@
         .form-group input:focus {
             border-color: #007bff;
             outline: none;
+        }
+
+        /* Ícono para mostrar/ocultar contraseña */
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 0.8rem;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .toggle-password:hover {
+            opacity: 1;
         }
 
         .btn {
@@ -91,6 +109,8 @@
             <div class="form-group">
                 <label for="password">Contraseña</label>
                 <input type="password" id="password" name="password" placeholder="Ingrese su contraseña" required>
+                <!-- Ícono para mostrar/ocultar -->
+                <img src="/mostrar.png" alt="Mostrar contraseña" id="togglePassword">
             </div>
             <button type="submit" class="btn">Iniciar Sesión</button>
 
@@ -101,5 +121,26 @@
             <?php endif; ?>
         </form>
     </div>
+
+    <script>
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+        // Aquí puedes cambiar la imagen si quieres, por ejemplo:
+        if (type === 'text') {
+            // Si ahora está en texto (visible), mostramos el ícono de ocultar
+            this.src = '/ocultar.png';
+            this.alt = 'Ocultar contraseña';
+        } else {
+        // Si ahora está en modo password (oculto), mostramos el ícono de mostrar
+            this.src = '/mostrar.png';
+            this.alt = 'Mostrar contraseña';
+        }
+        });
+    </script>
 </body>
 </html>
