@@ -11,8 +11,8 @@ class LegajoController
         public static function getAll()
         {
             $result = Database::query("SELECT * FROM LEGAJO");
-            var_dump($result); // Depura para ver los datos que retornan
-            return $result;
+            // Si hay registros, cargar la vista de listado
+            require_once __DIR__ . '/../Views/Legajo/Index.php';
         }
     
         public static function create()
