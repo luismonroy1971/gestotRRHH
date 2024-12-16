@@ -35,8 +35,7 @@
         color: #495057;
     }
 
-    .form-group input,
-    .form-group select {
+    .form-group input {
         width: 100%;
         padding: 10px;
         font-size: 1rem;
@@ -46,8 +45,7 @@
         transition: border-color 0.3s ease;
     }
 
-    .form-group input:focus,
-    .form-group select:focus {
+    .form-group input:focus {
         border-color: #80bdff;
         outline: none;
         background: #f0f8ff;
@@ -72,29 +70,32 @@
 </style>
 
 <div class="container">
-    <h2>Agregar Usuario</h2>
-    <form action="/usuarios" method="POST">
+    <h2>Editar Usuario</h2>
+    <form action="/usuarios/update/<?= htmlspecialchars($usuario['ID']) ?>" method="POST">
+        <input type="hidden" name="id" value="<?= htmlspecialchars($usuario['ID']) ?>">
+
         <div class="form-group">
-            <label for="nombre_usuario">Nombre de Usuario</label>
-            <input type="text" name="nombre_usuario" id="nombre_usuario" required>
+            <label for="nombre_usuario">Nombre de Usuario:</label>
+            <input type="text" name="nombre_usuario" id="nombre_usuario" 
+                   value="<?= htmlspecialchars($usuario['NOMBRE_USUARIO']) ?>" required>
         </div>
 
         <div class="form-group">
-            <label for="contrasena">Contraseña</label>
-            <input type="password" name="contrasena" id="contrasena" required>
+            <label for="contrasena">Contraseña:</label>
+            <input type="password" name="contrasena" id="contrasena" placeholder="Dejar en blanco para no cambiar">
         </div>
 
         <div class="form-group">
-            <label for="rol">Rol</label>
+            <label for="rol">Rol:</label>
             <select name="rol" id="rol" required>
                 <option value="">Seleccione un rol</option>
-                <option value="NOMINAS">NOMINAS</option>
-                <option value="RRHH">RRHH</option>
-                <option value="RECEPCION">RECEPCION</option>
-                <option value="ADMIN">ADMIN</option>
+                <option value="NOMINAS" <?= $usuario['ROL'] === 'NOMINAS' ? 'selected' : '' ?>>NOMINAS</option>
+                <option value="RRHH" <?= $usuario['ROL'] === 'RRHH' ? 'selected' : '' ?>>RRHH</option>
+                <option value="RECEPCION" <?= $usuario['ROL'] === 'RECEPCION' ? 'selected' : '' ?>>RECEPCION</option>
+                <option value="ADMIN" <?= $usuario['ROL'] === 'ADMIN' ? 'selected' : '' ?>>ADMIN</option>
             </select>
         </div>
 
-        <button type="submit">Guardar</button>
+        <button type="submit">Guardar Cambios</button>
     </form>
 </div>

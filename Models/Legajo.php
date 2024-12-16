@@ -30,8 +30,10 @@ class Legajo
                 $data['emitido'],
                 $data['emitido_usuario'],
                 $data['emitido_fecha'],
+                $data['subido'],
                 $data['subido_usuario'],
                 $data['subido_fecha'],
+                $data['firmado'],
                 $data['firmado_usuario'],
                 $data['firmado_fecha'],
                 $data['observacion'] ?? null
@@ -49,9 +51,17 @@ class Legajo
                 EJERCICIO = ?, 
                 PERIODO = ?, 
                 EMITIDO = ?, 
+                EMITIDO_USUARIO = ?,
+                EMITIDO_HORA = ?,
+                SUBIDO = ?,
+                SUBIDO_USUARIO = ?,
+                SUBIDO_HORA = ?,
+                FISICO = ?,
+                FISICO_USUARIO = ?,
+                FISICO_HORA = ?,
                 OBSERVACION = ?, 
-                MODIFICADO_USUARIO = ?, 
-                MODIFICADO_FECHA = ? 
+                OBSERVACION_USUARIO = ?, 
+                OBSERVACION_HORA = ? 
             WHERE ID = ?", [
                 $data['tipo_documento'],
                 $data['n_documento'],
@@ -59,9 +69,17 @@ class Legajo
                 $data['ejercicio'],
                 $data['periodo'],
                 $data['emitido'],
+                $data['emitido_usuario'],
+                $data['emitido_hora'],
+                $data['subido'],
+                $data['subido_usuario'],
+                $data['subido_hora'],
+                $data['fisico'],
+                $data['fisico_usuario'],
+                $data['fisico_hora'],
                 $data['observacion'] ?? null,
-                $data['modificado_usuario'],
-                $data['modificado_fecha'],
+                $data['observacion_usuario'],
+                $data['observacion_hora'],
                 $id
             ]
         );

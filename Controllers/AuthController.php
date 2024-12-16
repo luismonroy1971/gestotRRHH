@@ -53,7 +53,9 @@ class AuthController
             );
         }
 
-        return Response::json(['message' => 'Sesión cerrada exitosamente.']);
+        // Redirige al login con un mensaje de éxito
+        header('Location: /login?message=Sesión cerrada exitosamente');
+        exit;
     }
 
     // Verificar si el usuario está autenticado

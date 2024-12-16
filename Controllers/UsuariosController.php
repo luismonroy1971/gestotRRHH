@@ -3,12 +3,11 @@
 namespace Controllers;
 
 use Models\Usuario;
-use Libs\Response;
 
 class UsuariosController {
     public static function getAll() {
         $usuarios = Usuario::getAll();
-        return Response::json($usuarios);
+        include __DIR__ . '/../Views/Usuarios/Index.php';
     }
 
     public static function create() {
@@ -21,16 +20,21 @@ class UsuariosController {
         $result = Usuario::create($data);
 
         if ($result) {
-            return Response::json(['message' => 'Usuario creado correctamente.'], 201);
+            // Redirigir a /usuarios con mensaje de éxito
+            header('Location: /usuarios?message=Usuario creado correctamente.');
+            exit;
         } else {
-            return Response::json(['error' => 'Error al crear usuario'], 500);
+            // Redirigir a /usuarios con mensaje de error
+            header('Location: /usuarios?message=Error al crear usuario.');
+            exit;
         }
     }
 
     public static function update() {
         $id = $_POST['id'] ?? null;
         if (!$id) {
-            return Response::json(['error' => 'ID no proporcionado'], 400);
+            header('Location: /usuarios?message=ID no proporcionado');
+            exit;
         }
 
         $data = [
@@ -42,24 +46,43 @@ class UsuariosController {
         $result = Usuario::update($id, $data);
 
         if ($result !== false) {
-            return Response::json(['message' => 'Usuario actualizado correctamente.']);
+            header('Location: /usuarios?message=Usuario actualizado correctamente.');
+            exit;
         } else {
-            return Response::json(['error' => 'Error al actualizar el usuario.'], 500);
+            header('Location: /usuarios?message=Error al actualizar el usuario.');
+            exit;
         }
     }
 
     public static function delete() {
         $id = $_POST['id'] ?? null;
         if (!$id) {
-            return Response::json(['error' => 'ID no proporcionado'], 400);
+            header('Location: /usuarios?message=ID no proporcionado');
+            exit;
         }
 
         $result = Usuario::delete($id);
 
         if ($result !== false) {
-            return Response::json(['message' => 'Usuario eliminado correctamente.']);
+            header('Location: /usuarios?message=Usuario eliminado correctamente.');
+            exit;
         } else {
-            return Response::json(['error' => 'Error al eliminar el usuario.'], 500);
+            header('Location: /usuarios?message=Error al eliminar el usuario.');
+            exit;
         }
+    }
+
+    public static function showEditForm($id) {
+        $usuario = Usuario::getById($id);
+        if (!$usuario) {
+            header('Location: /usuarios?message=Usuario no encontrado');
+            exit;
+        }
+
+        include __DIR__ . '/../Views/Usuarios/Edit.php';
+    }
+
+    public static function showCreateForm() {
+        include __DIR__ . '/../Views/Usuarios/Create.php';
     }
 }

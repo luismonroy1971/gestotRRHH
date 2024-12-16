@@ -41,4 +41,11 @@ class Usuario
         $result = Database::query("SELECT * FROM USUARIOS WHERE NOMBRE_USUARIO = ?", [$username]);
         return $result ? $result[0] : null;
     }
+
+    public static function getById($id)
+{
+    $result = Database::query("SELECT * FROM USUARIOS WHERE ID = ?", [$id]);
+    return $result ? $result[0] : null;
+}
+
 }

@@ -68,62 +68,63 @@ th {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agregar Legajo</title>
+    <title>Editar Legajo</title>
 </head>
 <body>
     <div class="container">
-        <h1>Agregar Legajo</h1>
+        <h1>Editar Legajo</h1>
 
-        <form action="/legajo/create" method="POST" enctype="multipart/form-data">
+        <form action="/legajo/update" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="<?= htmlspecialchars($legajo['ID']) ?>">
+
             <div class="form-group">
                 <label for="tipo_documento">Tipo Documento</label>
-                <input type="text" name="tipo_documento" id="tipo_documento" required>
+                <input type="text" name="tipo_documento" id="tipo_documento" value="<?= htmlspecialchars($legajo['TIPO_DOCUMENTO']) ?>" required>
             </div>
 
             <div class="form-group">
                 <label for="n_documento">Número Documento</label>
-                <input type="text" name="n_documento" id="n_documento" required>
-            </div>
-
-            <div class="form-group">
-                <label for="documento_id">Documento</label>
-                <select name="documento_id" id="documento_id" required>
-                    <!-- Opciones dinámicas -->
-                </select>
+                <input type="text" name="n_documento" id="n_documento" value="<?= htmlspecialchars($legajo['N_DOCUMENTO']) ?>" required>
             </div>
 
             <div class="form-group">
                 <label for="ejercicio">Ejercicio</label>
                 <select name="ejercicio" id="ejercicio" required>
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
+                    <option value="2024" <?= $legajo['EJERCICIO'] == '2024' ? 'selected' : '' ?>>2024</option>
+                    <option value="2025" <?= $legajo['EJERCICIO'] == '2025' ? 'selected' : '' ?>>2025</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="emitido">Subir Archivo (Emitido - NOMINAS)</label>
                 <input type="file" name="emitido" id="emitido" accept="application/pdf">
+                <?php if ($legajo['EMITIDO']): ?>
+                    <p>Archivo Actual: <a href="<?= htmlspecialchars($legajo['EMITIDO']) ?>" target="_blank">Ver Archivo</a></p>
+                <?php endif; ?>
             </div>
 
             <div class="form-group">
                 <label for="subido">Subir Archivo (Subido - RRHH)</label>
                 <input type="file" name="subido" id="subido" accept="application/pdf">
+                <?php if ($legajo['SUBIDO']): ?>
+                    <p>Archivo Actual: <a href="<?= htmlspecialchars($legajo['SUBIDO']) ?>" target="_blank">Ver Archivo</a></p>
+                <?php endif; ?>
             </div>
 
             <div class="form-group">
                 <label for="fisico">¿Documento Físico? (Recepción)</label>
                 <select name="fisico" id="fisico">
-                    <option value="1">SI</option>
-                    <option value="0">NO</option>
+                    <option value="1" <?= $legajo['FISICO'] == '1' ? 'selected' : '' ?>>SI</option>
+                    <option value="0" <?= $legajo['FISICO'] == '0' ? 'selected' : '' ?>>NO</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="observacion">Observación</label>
-                <textarea name="observacion" id="observacion" rows="4"></textarea>
+                <textarea name="observacion" id="observacion" rows="4"><?= htmlspecialchars($legajo['OBSERVACION']) ?></textarea>
             </div>
 
-            <button type="submit" class="button save">Guardar</button>
+            <button type="submit" class="button save">Guardar Cambios</button>
             <a href="/legajo" class="button cancel">Cancelar</a>
         </form>
     </div>
