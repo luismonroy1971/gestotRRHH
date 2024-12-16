@@ -183,49 +183,54 @@ form button {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agregar Colaborador</title>
-    <link rel="stylesheet" href="/Styles.css">
+    <title>Editar Colaborador</title>
 </head>
 <body>
     <div class="container">
-        <h1>Agregar Colaborador</h1>
-        <form action="/colaboradores" method="POST">
+        <h2>Editar Colaborador</h2>
+        <form action="/colaboradores/update" method="POST">
+            <input type="hidden" name="id" value="<?= htmlspecialchars($colaborador['ID']) ?>">
+
             <div class="form-group">
                 <label for="tipo_documento">Tipo Documento</label>
-                <input type="text" name="tipo_documento" id="tipo_documento" required>
+                <input type="text" name="tipo_documento" id="tipo_documento" 
+                       value="<?= htmlspecialchars($colaborador['TIPO_DOCUMENTO']) ?>" required>
             </div>
+
             <div class="form-group">
                 <label for="n_documento">Número Documento</label>
-                <input type="text" name="n_documento" id="n_documento" required>
+                <input type="text" name="n_documento" id="n_documento" 
+                       value="<?= htmlspecialchars($colaborador['N_DOCUMENTO']) ?>" required>
             </div>
+
             <div class="form-group">
-                <label for="apellidos_nombres">Nombre Completo</label>
-                <input type="text" name="apellidos_nombres" id="apellidos_nombres" required>
+                <label for="apellidos_nombres">Apellidos y Nombres</label>
+                <input type="text" name="apellidos_nombres" id="apellidos_nombres" 
+                       value="<?= htmlspecialchars($colaborador['APELLIDOS_NOMBRES']) ?>" required>
             </div>
+
             <div class="form-group">
                 <label for="fecha_ingreso">Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" id="fecha_ingreso" required>
+                <input type="date" name="fecha_ingreso" id="fecha_ingreso" 
+                       value="<?= htmlspecialchars($colaborador['FECHA_INGRESO']) ?>">
             </div>
+
             <div class="form-group">
                 <label for="area">Área</label>
-                <input type="text" name="area" id="area" required>
+                <input type="text" name="area" id="area" 
+                       value="<?= htmlspecialchars($colaborador['AREA']) ?>">
             </div>
+
             <div class="form-group">
                 <label for="correo">Correo</label>
-                <input type="email" name="correo" id="correo" required>
+                <input type="email" name="correo" id="correo" 
+                       value="<?= htmlspecialchars($colaborador['CORREO']) ?>">
             </div>
-            <div class="form-group">
-                <label for="aprobador_1">Aprobador 1</label>
-                <input type="text" name="aprobador_1" id="aprobador_1">
-            </div>
-            <div class="form-group">
-                <label for="aprobador_2">Aprobador 2</label>
-                <input type="text" name="aprobador_2" id="aprobador_2">
-            </div>
-            <button type="submit" class="button save">Guardar</button>
+
+            <button type="submit" class="button save">Guardar Cambios</button>
             <a href="/colaboradores" class="button cancel">Cancelar</a>
         </form>
     </div>
 </body>
 </html>
+

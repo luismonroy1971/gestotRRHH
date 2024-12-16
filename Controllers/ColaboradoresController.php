@@ -3,7 +3,6 @@
 namespace Controllers;
 
 use Libs\Database;
-use Libs\Response;
 
 class ColaboradoresController
 {
@@ -11,7 +10,7 @@ class ColaboradoresController
     public static function index()
     {
         $colaboradores = self::getAll();
-        return Response::json($colaboradores);
+        require_once __DIR__ . '/../Views/Colaboradores/Index.php';
     }
 
     // Obtener todos los colaboradores
@@ -20,79 +19,113 @@ class ColaboradoresController
         return Database::query("SELECT * FROM COLABORADORES");
     }
 
-    // Buscar colaboradores por documento
-    public static function search()
+    // Mostrar formulario de creación
+    public static function showCreateForm()
     {
-        $data = $_GET; // Obtener parámetros de búsqueda
-        $tipoDocumento = $data['tipo_documento'] ?? null;
-        $nDocumento = $data['n_documento'] ?? null;
-        $nombre = $data['nombre'] ?? null;
-
-        if ($tipoDocumento && $nDocumento) {
-            $colaborador = self::findByDocument($tipoDocumento, $nDocumento);
-            return Response::json($colaborador);
-        } elseif ($nombre) {
-            $resultados = self::searchByName($nombre);
-            return Response::json($resultados);
-        } else {
-            return Response::json(['error' => 'Parámetros de búsqueda incorrectos'], 400);
-        }
-    }
-
-    public static function findByDocument($tipoDocumento, $nDocumento)
-    {
-        return Database::query("SELECT * FROM COLABORADORES WHERE TIPO_DOCUMENTO = ? AND N_DOCUMENTO = ?", [$tipoDocumento, $nDocumento]);
-    }
-
-    public static function searchByName($query)
-    {
-        return Database::query("SELECT * FROM COLABORADORES WHERE APELLIDOS_NOMBRES LIKE ?", ["%$query%"]);
+        require_once __DIR__ . '/../Views/Colaboradores/Create.php';
     }
 
     // Crear un nuevo colaborador
     public static function create()
     {
-        $data = json_decode(file_get_contents('php://input'), true);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'tipo_documento' => $_POST['tipo_documento'] ?? null,
+                'n_documento' => $_POST['n_documento'] ?? null,
+                'apellidos_nombres' => $_POST['apellidos_nombres'] ?? null,
+                'fecha_ingreso' => $_POST['fecha_ingreso'] ?? null,
+                'area' => $_POST['area'] ?? null,
+                'correo' => $_POST['correo'] ?? null,
+                'aprobador_1' => $_POST['aprobador_1'] ?? null,
+                'aprobador_2' => $_POST['aprobador_2'] ?? null
+            ];
 
-        if (!$data || !isset($data['tipo_documento'], $data['n_documento'], $data['apellidos_nombres'])) {
-            return Response::json(['error' => 'Datos incompletos'], 400);
+            Database::insert(
+                "INSERT INTO COLABORADORES (TIPO_DOCUMENTO, N_DOCUMENTO, APELLIDOS_NOMBRES, FECHA_INGRESO, AREA, CORREO, APROBADOR_1, APROBADOR_2)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                array_values($data)
+            );
+
+            header('Location: /colaboradores?message=Colaborador creado exitosamente');
+            exit;
         }
 
-        $result = Database::insert("INSERT INTO COLABORADORES (TIPO_DOCUMENTO, N_DOCUMENTO, APELLIDOS_NOMBRES) VALUES (?, ?, ?)", [
-            $data['tipo_documento'], $data['n_documento'], $data['apellidos_nombres']
-        ]);
-
-        return Response::json(['message' => 'Colaborador creado exitosamente', 'id' => $result]);
+        self::showCreateForm();
     }
+
+    public static function showEditForm($id)
+    {
+        if (!$id) {
+            // Redirige si el ID no está definido
+            header('Location: /colaboradores?error=ID no proporcionado');
+            exit;
+        }
+    
+        // Buscar colaborador
+        $colaborador = Database::query("SELECT * FROM COLABORADORES WHERE ID = ?", [$id]);
+        
+        if (empty($colaborador)) {
+            // Redirige si no se encuentra el colaborador
+            header('Location: /colaboradores?error=Colaborador no encontrado');
+            exit;
+        }
+    
+        // Pasar el colaborador a la vista
+        $colaborador = $colaborador[0];
+        require_once __DIR__ . '/../Views/Colaboradores/Edit.php';
+    }
+    
 
     // Actualizar un colaborador
     public static function update()
     {
-        $id = $_GET['id'] ?? null;
-        $data = json_decode(file_get_contents('php://input'), true);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id'] ?? null;
 
-        if (!$id || !$data) {
-            return Response::json(['error' => 'ID o datos incompletos'], 400);
+            if (!$id) {
+                header('Location: /colaboradores?error=ID no proporcionado');
+                exit;
+            }
+
+            $data = [
+                'tipo_documento' => $_POST['tipo_documento'] ?? null,
+                'n_documento' => $_POST['n_documento'] ?? null,
+                'apellidos_nombres' => $_POST['apellidos_nombres'] ?? null,
+                'fecha_ingreso' => $_POST['fecha_ingreso'] ?? null,
+                'area' => $_POST['area'] ?? null,
+                'correo' => $_POST['correo'] ?? null,
+                'aprobador_1' => $_POST['aprobador_1'] ?? null,
+                'aprobador_2' => $_POST['aprobador_2'] ?? null
+            ];
+
+            Database::update(
+                "UPDATE COLABORADORES SET TIPO_DOCUMENTO = ?, N_DOCUMENTO = ?, APELLIDOS_NOMBRES = ?, FECHA_INGRESO = ?, AREA = ?, CORREO = ?, APROBADOR_1 = ?, APROBADOR_2 = ? WHERE ID = ?",
+                [...array_values($data), $id]
+            );
+
+            header('Location: /colaboradores?message=Colaborador actualizado exitosamente');
+            exit;
         }
 
-        Database::update("UPDATE COLABORADORES SET TIPO_DOCUMENTO = ?, N_DOCUMENTO = ?, APELLIDOS_NOMBRES = ? WHERE ID = ?", [
-            $data['tipo_documento'], $data['n_documento'], $data['apellidos_nombres'], $id
-        ]);
-
-        return Response::json(['message' => 'Colaborador actualizado exitosamente']);
+        $id = $_GET['id'] ?? null;
+        self::showEditForm($id);
     }
 
     // Eliminar un colaborador
     public static function delete()
     {
-        $id = $_GET['id'] ?? null;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id'] ?? null;
 
-        if (!$id) {
-            return Response::json(['error' => 'ID requerido'], 400);
+            if (!$id) {
+                header('Location: /colaboradores?error=ID no proporcionado');
+                exit;
+            }
+
+            Database::delete("DELETE FROM COLABORADORES WHERE ID = ?", [$id]);
+
+            header('Location: /colaboradores?message=Colaborador eliminado exitosamente');
+            exit;
         }
-
-        Database::delete("DELETE FROM COLABORADORES WHERE ID = ?", [$id]);
-
-        return Response::json(['message' => 'Colaborador eliminado exitosamente']);
     }
 }

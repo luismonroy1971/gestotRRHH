@@ -61,10 +61,22 @@ switch ($controller) {
             } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Controllers\ColaboradoresController::create();
             }
-        } elseif ($action === 'search') {
-            Controllers\ColaboradoresController::search();
+        } elseif ($action === 'create') {
+            // Mostrar formulario de creación
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                Controllers\ColaboradoresController::showCreateForm();
+            }
         } elseif ($action === 'update') {
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Actualizar un colaborador
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                $id = $_GET['id'] ?? null;
+                if ($id) {
+                    Controllers\ColaboradoresController::showEditForm($id);
+                } else {
+                    header('Location: /colaboradores?error=ID no proporcionado');
+                    exit;
+                }
+            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Controllers\ColaboradoresController::update();
             }
         } elseif ($action === 'delete') {
@@ -76,6 +88,7 @@ switch ($controller) {
             echo json_encode(['error' => 'Ruta no encontrada', 'ruta' => $path]);
         }
         break;
+        
 
     case 'documentos':
             if ($action === '') {
