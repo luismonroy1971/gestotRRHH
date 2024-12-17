@@ -66,6 +66,11 @@ switch ($controller) {
             if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 Controllers\ColaboradoresController::showCreateForm();
             }
+        } elseif ($action === 'search') {
+            // Nueva ruta: Buscar colaborador por tipo_documento y n_documento
+            $tipoDocumento = $_GET['tipo_documento'] ?? null;
+            $nDocumento = $_GET['n_documento'] ?? null;
+            Controllers\ColaboradoresController::search($tipoDocumento, $nDocumento);
         } elseif ($action === 'update') {
             // Actualizar un colaborador
             if ($_SERVER['REQUEST_METHOD'] === 'GET') {

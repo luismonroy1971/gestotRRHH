@@ -3,10 +3,16 @@
 namespace Controllers;
 
 use Models\Documento;
+use Libs\Database;
 
 class DocumentosController
 {
     public static function getAll()
+    {
+        return Database::query("SELECT * FROM COLABORADORES");
+    }
+
+    public static function index()
     {
         $documentos = Documento::getAll();
         require_once __DIR__ . '/../Views/Documentos/Index.php';

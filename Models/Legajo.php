@@ -20,7 +20,7 @@ class Legajo
     {
         return Database::insert(
             "INSERT INTO LEGAJO 
-            (TIPO_DOCUMENTO, N_DOCUMENTO, DOCUMENTO_ID, EJERCICIO, PERIODO, EMITIDO, EMITIDO_USUARIO, EMITIDO_FECHA, SUBIDO_USUARIO, SUBIDO_FECHA, FIRMADO_USUARIO, FIRMADO_FECHA, OBSERVACION) 
+            (TIPO_DOCUMENTO, N_DOCUMENTO, DOCUMENTO_ID, EJERCICIO, PERIODO, EMITIDO, EMITIDO_USUARIO, EMITIDO_HORA, EMITIDO_OBSERVACION, SUBIDO_USUARIO, SUBIDO_HORA, SUBIDO_OBSERVACION, FIRMADO_USUARIO, FIRMADO_HORA, FIRMADO_OBSERVACION) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                 $data['tipo_documento'],
                 $data['n_documento'],
@@ -29,14 +29,16 @@ class Legajo
                 $data['periodo'],
                 $data['emitido'],
                 $data['emitido_usuario'],
-                $data['emitido_fecha'],
+                $data['emitido_hora'],
+                $data['emitido_observacion'],
                 $data['subido'],
                 $data['subido_usuario'],
-                $data['subido_fecha'],
+                $data['subido_hora'],
+                $data['subido_observacion'],
                 $data['firmado'],
                 $data['firmado_usuario'],
-                $data['firmado_fecha'],
-                $data['observacion'] ?? null
+                $data['firmado_hora'],
+                $data['firmado_observacion']
             ]
         );
     }
@@ -53,15 +55,15 @@ class Legajo
                 EMITIDO = ?, 
                 EMITIDO_USUARIO = ?,
                 EMITIDO_HORA = ?,
+                EMITIDO_OBSERVACION = ?,
                 SUBIDO = ?,
                 SUBIDO_USUARIO = ?,
                 SUBIDO_HORA = ?,
+                SUBIDO_OBSERVACION = ?,
                 FISICO = ?,
                 FISICO_USUARIO = ?,
                 FISICO_HORA = ?,
-                OBSERVACION = ?, 
-                OBSERVACION_USUARIO = ?, 
-                OBSERVACION_HORA = ? 
+                FISICO_OBSERVACION = ?, 
             WHERE ID = ?", [
                 $data['tipo_documento'],
                 $data['n_documento'],
@@ -71,15 +73,15 @@ class Legajo
                 $data['emitido'],
                 $data['emitido_usuario'],
                 $data['emitido_hora'],
+                $data['emitido_observacion'],
                 $data['subido'],
                 $data['subido_usuario'],
                 $data['subido_hora'],
+                $data['subido_observacion'],
                 $data['fisico'],
                 $data['fisico_usuario'],
                 $data['fisico_hora'],
-                $data['observacion'] ?? null,
-                $data['observacion_usuario'],
-                $data['observacion_hora'],
+                $data['fisico_observacion'],
                 $id
             ]
         );

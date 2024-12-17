@@ -8,7 +8,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 100%;
     margin: 50px auto;
     background: #fff;
     padding: 20px;
@@ -85,60 +85,64 @@ th {
         <!-- Botón para agregar un nuevo legajo -->
         <a href="/legajo/create" class="button save">Agregar Nuevo Legajo</a>
 
-        <!-- Tabla de legajos -->
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Tipo Documento</th>
-                    <th>Número Documento</th>
-                    <th>Ejercicio</th>
-                    <th>Emitido</th>
-                    <th>Subido</th>
-                    <th>Físico</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($legajos)): ?>
-                    <?php foreach ($legajos as $legajo): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($legajo['ID']) ?></td>
-                            <td><?= htmlspecialchars($legajo['TIPO_DOCUMENTO']) ?></td>
-                            <td><?= htmlspecialchars($legajo['N_DOCUMENTO']) ?></td>
-                            <td><?= htmlspecialchars($legajo['EJERCICIO']) ?></td>
-                            <td>
-                                <?php if ($legajo['EMITIDO']): ?>
-                                    <a href="<?= htmlspecialchars($legajo['EMITIDO']) ?>" target="_blank">Ver</a>
-                                <?php else: ?>
-                                    -
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if ($legajo['SUBIDO']): ?>
-                                    <a href="<?= htmlspecialchars($legajo['SUBIDO']) ?>" target="_blank">Ver</a>
-                                <?php else: ?>
-                                    -
-                                <?php endif; ?>
-                            </td>
-                            <td><?= $legajo['FISICO'] == 1 ? 'SI' : 'NO' ?></td>
-                            <td>
-                                <a href="/legajo/update/<?= $legajo['ID'] ?>" class="button edit">Editar</a>
-                                <form action="/legajo/delete" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro de eliminar este legajo?');">
-                                    <input type="hidden" name="id" value="<?= $legajo['ID'] ?>">
-                                    <button type="submit" class="button delete">Eliminar</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <!-- Mensaje cuando no hay registros -->
+            <!-- Tabla de legajos -->
+    <table style="width: 100%;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tipo Documento</th>
+                <th>Número Documento</th>
+                <th>Apellidos y Nombres</th>
+                <th>Ejercicio</th>
+                <th>Periodo</th>
+                <th>Emitido</th>
+                <th>Subido</th>
+                <th>Físico</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (!empty($legajos)): ?>
+                <?php foreach ($legajos as $legajo): ?>
                     <tr>
-                        <td colspan="8" style="text-align: center;">No hay registros disponibles.</td>
+                        <td><?= htmlspecialchars($legajo['ID']) ?></td>
+                        <td><?= htmlspecialchars($legajo['TIPO_DOCUMENTO']) ?></td>
+                        <td><?= htmlspecialchars($legajo['N_DOCUMENTO']) ?></td>
+                        <td><?= htmlspecialchars($legajo['APELLIDOS_NOMBRES'] ?? '-') ?></td>
+                        <td><?= htmlspecialchars($legajo['EJERCICIO']) ?></td>
+                        <td><?= htmlspecialchars($legajo['PERIODO'] ?? '-') ?></td>
+                        <td>
+                            <?php if ($legajo['EMITIDO']): ?>
+                                <a href="<?= htmlspecialchars($legajo['EMITIDO']) ?>" target="_blank">Ver</a>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($legajo['SUBIDO']): ?>
+                                <a href="<?= htmlspecialchars($legajo['SUBIDO']) ?>" target="_blank">Ver</a>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+                        <td><?= $legajo['FISICO'] == 1 ? 'SI' : 'NO' ?></td>
+                        <td>
+                            <a href="/legajo/update/<?= $legajo['ID'] ?>" class="button edit">Editar</a>
+                            <form action="/legajo/delete" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro de eliminar este legajo?');">
+                                <input type="hidden" name="id" value="<?= $legajo['ID'] ?>">
+                                <button type="submit" class="button delete">Eliminar</button>
+                            </form>
+                        </td>
                     </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="10" style="text-align: center;">No hay registros disponibles.</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+
     </div>
 </body>
 </html>
