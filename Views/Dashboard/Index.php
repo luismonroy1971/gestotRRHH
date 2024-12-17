@@ -1,3 +1,14 @@
+<?php
+// Verificar si la sesión no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Obtener valores de sesión
+$nombreUsuario = $_SESSION['username'] ?? 'Usuario';
+$rolUsuario = $_SESSION['role'] ?? 'INVITADO';
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,7 +23,7 @@
             color: #333;
         }
 
-        /* Encabezado Principal (Barra superior) */
+        /* Encabezado Principal */
         header {
             display: flex;
             align-items: center;
@@ -22,9 +33,17 @@
             padding: 15px 20px;
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.5rem;
+        header h1 { margin: 0; font-size: 1.5rem; }
+
+        header .logout {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        header .user-name {
+            font-weight: 600;
+            color: #f8d7da;
         }
 
         header .logout a {
@@ -34,9 +53,7 @@
             transition: color 0.3s ease;
         }
 
-        header .logout a:hover {
-            color: #fff;
-        }
+        header .logout a:hover { color: #fff; }
 
         /* Contenedor principal */
         .container {
@@ -98,40 +115,44 @@
             color: #495057;
         }
 
-        nav a:hover {
-            color: #0056b3;
-        }
+        nav a:hover { color: #0056b3; }
     </style>
 </head>
 <body>
+    <!-- Encabezado -->
     <header>
         <h1>Panel de Administración</h1>
         <div class="logout">
+            <span class="user-name"><?= htmlspecialchars($nombreUsuario); ?> (<?= htmlspecialchars($rolUsuario); ?>)</span>
             <a href="/logout">Cerrar Sesión</a>
         </div>
     </header>
+
+    <!-- Contenedor Principal -->
     <div class="container">
         <h2>Secciones</h2>
         <nav>
             <ul>
-                <li>
-                    <a href="/usuarios">
-                        <span class="icon">👤</span>
-                        Administrar Usuarios
-                    </a>
-                </li>
-                <li>
-                    <a href="/documentos">
-                        <span class="icon">📄</span>
-                        Administrar Documentos
-                    </a>
-                </li>
-                <li>
-                    <a href="/colaboradores">
-                        <span class="icon">🤝</span>
-                        Administrar Colaboradores
-                    </a>
-                </li>
+                <?php if ($rolUsuario === 'ADMIN'): ?>
+                    <li>
+                        <a href="/usuarios">
+                            <span class="icon">👤</span>
+                            Administrar Usuarios
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/documentos">
+                            <span class="icon">📄</span>
+                            Administrar Documentos
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/colaboradores">
+                            <span class="icon">🤝</span>
+                            Administrar Colaboradores
+                        </a>
+                    </li>
+                <?php endif; ?>
                 <li>
                     <a href="/legajo">
                         <span class="icon">📁</span>

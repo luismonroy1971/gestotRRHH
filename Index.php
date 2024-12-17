@@ -61,6 +61,9 @@ switch ($controller) {
             } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Controllers\ColaboradoresController::create();
             }
+        } elseif ($action === 'list' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+            // Nuevo endpoint para listar documentos en JSON
+            Controllers\ColaboradoresController::listAll();
         } elseif ($action === 'create') {
             // Mostrar formulario de creación
             if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -94,10 +97,17 @@ switch ($controller) {
         }
         break;
         
-
-    case 'documentos':
+        case 'documentos':
             if ($action === '') {
-                Controllers\DocumentosController::getAll();
+                // /documentos
+                if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                    Controllers\DocumentosController::index();
+                } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                    Controllers\DocumentosController::create();
+                }
+            } elseif ($action === 'list' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+                // Nuevo endpoint para listar documentos en JSON
+                Controllers\DocumentosController::listAll();
             } elseif ($action === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 Controllers\DocumentosController::create();
             } elseif ($action === 'create') {
@@ -113,7 +123,7 @@ switch ($controller) {
                 echo json_encode(['error' => 'Ruta no encontrada']);
             }
             break;
-        
+                
     case 'legajo':
         if ($action === '') {
             if ($_SERVER['REQUEST_METHOD'] === 'GET') {

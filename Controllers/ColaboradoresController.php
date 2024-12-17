@@ -153,6 +153,21 @@ class ColaboradoresController
         }
     }
 
-
+    public static function listAll()
+    {
+        // Configurar encabezado JSON
+        header('Content-Type: application/json; charset=utf-8');
+    
+        // Obtener todos los documentos desde el modelo
+        $colaboradores = Colaborador::getAll();
+    
+        // Devolver la lista de documentos en JSON
+        if (!empty($colaboradores)) {
+            echo json_encode(['data' => $colaboradores]);
+        } else {
+            echo json_encode(['data' => [], 'message' => 'No hay documentos disponibles']);
+        }
+        exit;
+    }
     
 }

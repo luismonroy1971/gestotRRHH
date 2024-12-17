@@ -104,7 +104,23 @@ class DocumentosController
         require_once __DIR__ . '/../Views/Documentos/Edit.php';
     }
     
-
+    public static function listAll()
+    {
+        // Configurar encabezado JSON
+        header('Content-Type: application/json; charset=utf-8');
+    
+        // Obtener todos los documentos desde el modelo
+        $documentos = \Models\Documento::getAll();
+    
+        // Devolver la lista de documentos en JSON
+        if (!empty($documentos)) {
+            echo json_encode(['data' => $documentos]);
+        } else {
+            echo json_encode(['data' => [], 'message' => 'No hay documentos disponibles']);
+        }
+        exit;
+    }
+    
 
     
 }
