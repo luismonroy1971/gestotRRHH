@@ -127,12 +127,15 @@ switch ($controller) {
     case 'legajo':
         if ($action === '') {
             if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                // Mostrar la lista de legajos
+                // Mostrar la lista de legajos o responder a solicitud AJAX
                 Controllers\LegajoController::getAll();
             } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Crear un nuevo legajo
                 Controllers\LegajoController::create();
             }
+        } elseif ($action === 'api' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+            // Nueva ruta para API
+            Controllers\LegajoController::getAll();
         } elseif ($action === 'create') {
             if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 // Mostrar la vista de creación

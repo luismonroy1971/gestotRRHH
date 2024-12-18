@@ -31,8 +31,37 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
         label { display: block; margin-bottom: 5px; }
         input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
         button { padding: 10px 15px; border: none; color: #fff; border-radius: 4px; cursor: pointer; }
-        .button.save { background-color: #28a745; }
+      
         .button.cancel { background-color: #6c757d; }
+        .add-button {
+            display: inline-block;
+            background-color: #059669;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            transition: background-color 0.2s;
+        }
+        .cancel-button {
+            display: inline-block;
+            background-color:rgb(236, 48, 23);
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 0.375rem;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            transition: background-color 0.2s;
+        }
+        .button.save { display: inline-block;
+            background-color: #059669;
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 0.375rem;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            transition: background-color 0.2s; 
+        }
     </style>
 </head>
 <body>
@@ -58,7 +87,7 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
                 <input type="text" name="n_documento" id="n_documento" required>
             </div>
 
-            <button type="button" id="buscar_nombre" onclick="buscarNombre()">Buscar Nombre Completo</button>
+            <button class="add-button type="button" id="buscar_nombre" onclick="buscarNombre()">Buscar Nombre Completo</button>
 
             <div class="form-group">
                 <label for="apellidos_nombres">Apellidos y Nombres</label>
@@ -123,7 +152,7 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
             <?php endif; ?>
 
             <button type="submit" class="button save">Guardar</button>
-            <a href="/legajo" class="button cancel">Cancelar</a>
+            <a href="/legajo" class="cancel-button">Cancelar</a>
         </form>
     </div>
 
