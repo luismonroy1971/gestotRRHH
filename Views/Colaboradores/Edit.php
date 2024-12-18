@@ -206,7 +206,7 @@ form button {
             <div class="form-group">
                 <label for="apellidos_nombres">Apellidos y Nombres</label>
                 <input type="text" name="apellidos_nombres" id="apellidos_nombres" 
-                       value="<?= htmlspecialchars($colaborador['APELLIDOS_NOMBRES']) ?>" required>
+                       value="<?= htmlspecialchars($colaborador['APELLIDOS_NOMBRES']) ?>" readonly required>
             </div>
 
             <div class="form-group">

@@ -30,10 +30,6 @@ class Documento
 
     public static function create($data)
     {
-        // Verificar si el código ya existe
-        if (self::findByCodigo($data['codigo'])) {
-            return false; // Código duplicado
-        }
     
         // Insertar el documento
         return Database::insert(
@@ -45,13 +41,7 @@ class Documento
 
     public static function update($id, $data)
     {
-        // Verificar si existe otro documento con el mismo código
-        $existing = self::findByCodigo($data['codigo']);
-    
-        // Si existe y NO corresponde al ID actual, mostrar error
-        if ($existing && $existing['ID'] != $id) {
-            return false; // El código pertenece a otro registro
-        }
+
     
         // Ejecutar la actualización
         return Database::update(

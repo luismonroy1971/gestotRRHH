@@ -102,7 +102,7 @@
             <!-- Nombre Completo -->
             <div class="form-group">
                 <label for="apellidos_nombres">Nombre Completo</label>
-                <input type="text" name="apellidos_nombres" id="apellidos_nombres" disabled>
+                <input type="text" name="apellidos_nombres" id="apellidos_nombres" readonly>
             </div>
 
             <!-- Fecha de Ingreso -->
@@ -132,18 +132,6 @@
                 <input type="email" name="correo" id="correo" required>
             </div>
 
-            <!-- Aprobador 1 -->
-            <div class="form-group">
-                <label for="aprobador_1">Aprobador 1</label>
-                <input type="text" name="aprobador_1" id="aprobador_1">
-            </div>
-
-            <!-- Aprobador 2 -->
-            <div class="form-group">
-                <label for="aprobador_2">Aprobador 2</label>
-                <input type="text" name="aprobador_2" id="aprobador_2">
-            </div>
-
             <!-- Botones -->
             <button type="submit" class="button">Guardar</button>
             <a href="/colaboradores" class="button cancel">Cancelar</a>
@@ -161,25 +149,49 @@
                 return;
             }
 
-            const tipoFormateado = tipoDocumento.padStart(2, '0');
-            const url = `https://master-database.vercel.app/masterDoc?DNIType=${tipoFormateado}&DNINumber=${nDocumento}`;
-
             try {
-                const response = await fetch(url);
+                // 1. Verificar si el colaborador ya existe en el sistema
+                const searchUrl = `/colaboradores/search?tipo_documento=${tipoDocumento}&n_documento=${nDocumento}`;
+                const searchResponse = await fetch(searchUrl);
+
+                if (!searchResponse.ok) {
+                    throw new Error("Error al verificar el colaborador existente.");
+                }
+
+                const searchResult = await searchResponse.json();
+
+                // 2. Validar si la data contiene el colaborador
+                if (Array.isArray(searchResult.data) && searchResult.data.length > 0) {
+                    const colaborador = searchResult.data[0];
+                    alert(`El colaborador ya existe: ${colaborador.APELLIDOS_NOMBRES}`);
+                    return;
+                }
+
+                // 3. Si no existe, buscar el nombre en el API externo
+                const tipoFormateado = tipoDocumento.padStart(2, '0');
+                const externalUrl = `https://master-database.vercel.app/masterDoc?DNIType=${tipoFormateado}&DNINumber=${nDocumento}`;
+                
+                const response = await fetch(externalUrl);
+
+                if (!response.ok) {
+                    throw new Error("Error al consultar el API externo.");
+                }
+
                 const result = await response.json();
 
-                // Verificar si hay datos
+                // 4. Verificar si la respuesta contiene el nombre
                 if (Array.isArray(result) && result.length > 0 && result[0].Apellidosy3Nombres) {
                     document.getElementById("apellidos_nombres").value = result[0].Apellidosy3Nombres;
                 } else {
-                    alert("No se encontró el nombre para este documento.");
+                    alert("No se encontró el nombre de trabajador en la máster");
                     document.getElementById("apellidos_nombres").value = "";
                 }
             } catch (error) {
-                console.error("Error al consultar el API:", error);
-                alert("Error al buscar el nombre en la API.");
+                console.error("Error en la búsqueda:", error);
+                alert("Ocurrió un error durante la búsqueda.");
             }
         }
+
     </script>
 </body>
 </html>

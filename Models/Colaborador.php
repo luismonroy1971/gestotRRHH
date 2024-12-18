@@ -25,29 +25,30 @@ class Colaborador
 
     public static function create($data)
     {
-        return Database::insert("INSERT INTO COLABORADORES (TIPO_DOCUMENTO, N_DOCUMENTO, APELLIDOS_NOMBRES, FECHA_INGRESO, AREA, CORREO, APROBADOR_1, APROBADOR_2) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
-            $data['tipo_documento'],
-            $data['n_documento'],
-            $data['apellidos_nombres'],
-            $data['fecha_ingreso'],
-            $data['area'],
-            $data['correo'],
-            $data['aprobador_1'],
-            $data['aprobador_2']
-        ]);
+        return Database::insert(
+            "INSERT INTO COLABORADORES (TIPO_DOCUMENTO, N_DOCUMENTO, APELLIDOS_NOMBRES, FECHA_INGRESO, AREA, CORREO) 
+             VALUES (?, ?, ?, ?, ?, ?)",
+            [
+                $data['tipo_documento'],
+                $data['n_documento'],
+                $data['apellidos_nombres'],
+                $data['fecha_ingreso'],
+                $data['area'],
+                $data['correo']
+            ]
+        );
     }
+    
 
     public static function update($id, $data)
     {
-        return Database::update("UPDATE COLABORADORES SET TIPO_DOCUMENTO = ?, N_DOCUMENTO = ?, APELLIDOS_NOMBRES = ?, FECHA_INGRESO = ?, AREA = ?, CORREO = ?, APROBADOR_1 = ?, APROBADOR_2 = ? WHERE ID = ?", [
+        return Database::update("UPDATE COLABORADORES SET TIPO_DOCUMENTO = ?, N_DOCUMENTO = ?, APELLIDOS_NOMBRES = ?, FECHA_INGRESO = ?, AREA = ?, CORREO = ? WHERE ID = ?", [
             $data['tipo_documento'],
             $data['n_documento'],
             $data['apellidos_nombres'],
             $data['fecha_ingreso'],
             $data['area'],
             $data['correo'],
-            $data['aprobador_1'],
-            $data['aprobador_2'],
             $id
         ]);
     }

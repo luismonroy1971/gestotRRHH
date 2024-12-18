@@ -30,29 +30,48 @@ class ColaboradoresController
     public static function create()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = [
-                'tipo_documento' => $_POST['tipo_documento'] ?? null,
-                'n_documento' => $_POST['n_documento'] ?? null,
-                'apellidos_nombres' => $_POST['apellidos_nombres'] ?? null,
-                'fecha_ingreso' => $_POST['fecha_ingreso'] ?? null,
-                'area' => $_POST['area'] ?? null,
-                'correo' => $_POST['correo'] ?? null,
-                'aprobador_1' => $_POST['aprobador_1'] ?? null,
-                'aprobador_2' => $_POST['aprobador_2'] ?? null
-            ];
-
-            Database::insert(
-                "INSERT INTO COLABORADORES (TIPO_DOCUMENTO, N_DOCUMENTO, APELLIDOS_NOMBRES, FECHA_INGRESO, AREA, CORREO, APROBADOR_1, APROBADOR_2)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                array_values($data)
-            );
-
-            header('Location: /colaboradores?message=Colaborador creado exitosamente');
-            exit;
+            try {
+                // Recopilar y validar los datos
+                $data = [
+                    'tipo_documento' => trim($_POST['tipo_documento'] ?? ''),
+                    'n_documento' => trim($_POST['n_documento'] ?? ''),
+                    'apellidos_nombres' => trim($_POST['apellidos_nombres'] ?? ''),
+                    'fecha_ingreso' => trim($_POST['fecha_ingreso'] ?? ''),
+                    'area' => trim($_POST['area'] ?? '') ?: null, // Permitir NULL
+                    'correo' => trim($_POST['correo'] ?? '') ?: null // Permitir NULL
+                ];
+    
+                // Validar campos requeridos
+                foreach (['tipo_documento', 'n_documento', 'apellidos_nombres', 'fecha_ingreso'] as $field) {
+                    if (empty($data[$field])) {
+                        throw new \Exception("El campo $field es obligatorio.");
+                    }
+                }
+    
+                // Intentar la inserción
+                Database::insert(
+                    "INSERT INTO COLABORADORES (TIPO_DOCUMENTO, N_DOCUMENTO, APELLIDOS_NOMBRES, FECHA_INGRESO, AREA, CORREO)
+                     VALUES (?, ?, ?, ?, ?, ?)",
+                    array_values($data)
+                );
+    
+                header('Location: /colaboradores?message=Colaborador creado exitosamente');
+                exit;
+    
+            } catch (\PDOException $e) {
+                // Mostrar el error exacto de la base de datos
+                echo "Error en la base de datos: " . $e->getMessage();
+                exit;
+            } catch (\Exception $e) {
+                // Mostrar errores de validación personalizados
+                echo "Error: " . $e->getMessage();
+                exit;
+            }
         }
-
+    
         self::showCreateForm();
     }
+    
 
     public static function showEditForm($id)
     {
@@ -78,39 +97,49 @@ class ColaboradoresController
     
 
     // Actualizar un colaborador
-    public static function update()
-    {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = $_POST['id'] ?? null;
+    // Actualizar un colaborador existente
+public static function update()
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $id = $_POST['id'] ?? null;
 
-            if (!$id) {
-                header('Location: /colaboradores?error=ID no proporcionado');
-                exit;
-            }
-
-            $data = [
-                'tipo_documento' => $_POST['tipo_documento'] ?? null,
-                'n_documento' => $_POST['n_documento'] ?? null,
-                'apellidos_nombres' => $_POST['apellidos_nombres'] ?? null,
-                'fecha_ingreso' => $_POST['fecha_ingreso'] ?? null,
-                'area' => $_POST['area'] ?? null,
-                'correo' => $_POST['correo'] ?? null,
-                'aprobador_1' => $_POST['aprobador_1'] ?? null,
-                'aprobador_2' => $_POST['aprobador_2'] ?? null
-            ];
-
-            Database::update(
-                "UPDATE COLABORADORES SET TIPO_DOCUMENTO = ?, N_DOCUMENTO = ?, APELLIDOS_NOMBRES = ?, FECHA_INGRESO = ?, AREA = ?, CORREO = ?, APROBADOR_1 = ?, APROBADOR_2 = ? WHERE ID = ?",
-                [...array_values($data), $id]
-            );
-
-            header('Location: /colaboradores?message=Colaborador actualizado exitosamente');
+        if (!$id) {
+            header('Location: /colaboradores?error=ID no proporcionado');
             exit;
         }
 
-        $id = $_GET['id'] ?? null;
-        self::showEditForm($id);
+        // Recopilar y validar los datos
+        $data = [
+            'tipo_documento' => trim($_POST['tipo_documento'] ?? ''),
+            'n_documento' => trim($_POST['n_documento'] ?? ''),
+            'apellidos_nombres' => trim($_POST['apellidos_nombres'] ?? ''),
+            'fecha_ingreso' => trim($_POST['fecha_ingreso'] ?? ''),
+            'area' => trim($_POST['area'] ?? ''),
+            'correo' => trim($_POST['correo'] ?? '')
+        ];
+
+        // Validar que ningún campo esté vacío
+        if (in_array('', $data, true)) {
+            header('Location: /colaboradores/edit?id=' . urlencode($id) . '&error=Todos los campos son obligatorios');
+            exit;
+        }
+
+        // Actualizar en la base de datos
+        Database::update(
+            "UPDATE COLABORADORES 
+             SET TIPO_DOCUMENTO = ?, N_DOCUMENTO = ?, APELLIDOS_NOMBRES = ?, FECHA_INGRESO = ?, AREA = ?, CORREO = ?
+             WHERE ID = ?",
+            [...array_values($data), $id]
+        );
+
+        header('Location: /colaboradores?message=Colaborador actualizado exitosamente');
+        exit;
     }
+
+    // Si no es POST, mostrar el formulario de edición
+    $id = $_GET['id'] ?? null;
+    self::showEditForm($id);
+}
 
     // Eliminar un colaborador
     public static function delete()
@@ -148,8 +177,11 @@ class ColaboradoresController
             http_response_code(200); // Código de éxito OK
             echo json_encode(['data' => $colaborador]);
         } else {
-            http_response_code(404); // Código Not Found
-            echo json_encode(['error' => 'No se encontró el colaborador']);
+            http_response_code(200); // Código Not Found
+            echo json_encode([
+                'data' => [],
+                'message' => 'El colaborador no existe en la base de datos.'
+            ]);
         }
     }
 

@@ -134,13 +134,15 @@
     <!-- Contenido principal -->
     <div class="container">
         <?php if (isset($_GET['message'])): ?>
-            <div style="color: green; margin-bottom: 20px;">
+            <div id="alert-message" class="alert" style="background: #d4edda; color: #155724; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
                 <?= htmlspecialchars($_GET['message']) ?>
             </div>
-        <?php elseif (isset($_GET['error'])): ?>
-            <div style="color: red; margin-bottom: 20px;">
-                <?= htmlspecialchars($_GET['error']) ?>
-            </div>
+            <script>
+                // Ocultar el mensaje después de 3 segundos
+                setTimeout(function() {
+                    document.getElementById('alert-message').style.display = 'none';
+                }, 3000);
+            </script>
         <?php endif; ?>
 
         <h2>Gestión de Documentos</h2>
