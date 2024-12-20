@@ -9,6 +9,37 @@ use Exception;
 
 class LegajoController
 {
+
+    public static function getAllSimple()
+    {
+        session_start();
+        $usuarioActual = $_SESSION['user_id'] ?? null;
+    
+        if (!$usuarioActual) {
+            header('Location: /login');
+            exit;
+        }
+    
+        try {
+            // Obtener los datos
+            $sql = "SELECT * FROM LEGAJO ORDER BY ID DESC";
+            $legajos = Database::query($sql);
+            
+            // Verificar si hay registros
+            if ($legajos === false) {
+                throw new \Exception("Error al obtener los legajos");
+            }
+            
+            // Cargar la vista con los datos
+            require_once __DIR__ . '/../Views/Legajo/Simple.php';
+            
+        } catch (\Exception $e) {
+            echo "<div style='color: red; margin: 20px; padding: 20px; border: 1px solid red;'>";
+            echo "Error: " . $e->getMessage();
+            echo "</div>";
+        }
+    }
+
     public static function getAll()
     {
         session_start();
@@ -35,9 +66,9 @@ class LegajoController
                     'apellidos_nombres' => $_GET['apellidos_nombres'] ?? null,
                     'ejercicio' => $_GET['ejercicio'] ?? null,
                     'periodo' => $_GET['periodo'] ?? null,
-                    'emitido' => isset($_GET['emitido']) ? $_GET['emitido'] === '1' : null,
-                    'subido' => isset($_GET['subido']) ? $_GET['subido'] === '1' : null,
-                    'fisico' => isset($_GET['fisico']) ? $_GET['fisico'] === '1' : null
+                    'emitido' => isset($_GET['emitido']) && $_GET['emitido'] !== '' ? $_GET['emitido'] === '1' : null,
+                    'subido' => isset($_GET['subido']) && $_GET['subido'] !== '' ? $_GET['subido'] === '1' : null,
+                    'fisico' => isset($_GET['fisico']) && $_GET['fisico'] !== '' ? $_GET['fisico'] === '1' : null
                 ];
     
                 // Eliminar filtros vacíos
@@ -46,16 +77,26 @@ class LegajoController
                 });
     
                 $result = Legajo::getAll($page, $perPage, $filters);
-                
-                if (!$result) {
+    
+                if ($result === false) {
                     throw new Exception('Error al obtener los datos');
+                }
+    
+                // Procesar los datos para el formato correcto
+                if (!empty($result['data'])) {
+                    foreach ($result['data'] as &$legajo) {
+                        $legajo['emitido'] = $legajo['EMITIDO'] ?? null;
+                        $legajo['subido'] = $legajo['SUBIDO'] ?? null;
+                        $legajo['fisico'] = $legajo['FISICO'] ? true : false;
+                    }
                 }
     
                 header('Content-Type: application/json');
                 return Response::json($result);
             } catch (Exception $e) {
+                error_log("Error en getAll: " . $e->getMessage());
                 header('HTTP/1.1 500 Internal Server Error');
-                return Response::json(['error' => $e->getMessage()]);
+                return Response::json(['error' => 'Error interno del servidor']);
             }
         }
     
@@ -132,6 +173,69 @@ class LegajoController
             return Response::json(['error' => 'Error al crear el legajo']);
         }
     }
+
+    public static function edit($id)
+    {
+        session_start();
+        $usuarioActual = $_SESSION['user_id'] ?? null;
+        $rolUsuario = $_SESSION['role'] ?? null;
+    
+        if (!$usuarioActual) {
+            header('Location: /login');
+            exit;
+        }
+    
+        try {
+            // Obtener datos del legajo
+            $result = Legajo::findById($id);
+            
+            error_log("ID recibido: " . $id);
+            error_log("Resultado de la consulta: " . print_r($result, true));
+            
+            if (empty($result)) {
+                header('Location: /legajo?error=' . urlencode('Legajo no encontrado'));
+                exit;
+            }
+            
+            // Obtener el primer resultado
+            $legajo = $result[0];
+    
+            // Obtener descripción del documento
+            $documentoDescripcion = '';
+            try {
+                $docResult = Database::query("SELECT DESCRIPCION FROM DOCUMENTOS WHERE ID = ?", [$legajo['DOCUMENTO_ID']]);
+                if (!empty($docResult)) {
+                    $documentoDescripcion = $docResult[0]['DESCRIPCION'];
+                }
+            } catch (Exception $e) {
+                error_log("Error al obtener descripción del documento: " . $e->getMessage());
+                $documentoDescripcion = 'No disponible';
+            }
+    
+            error_log("Documento descripción: " . $documentoDescripcion);
+    
+            // Array de meses para mostrar el periodo
+            $meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+    
+            // Debug de los datos antes de pasarlos a la vista
+            error_log("Datos finales del legajo: " . print_r([
+                'legajo' => $legajo,
+                'documentoDescripcion' => $documentoDescripcion,
+                'meses' => $meses
+            ], true));
+    
+            require_once __DIR__ . '/../Views/Legajo/Edit.php';
+        } catch (Exception $e) {
+            error_log("Error en edit: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            header('Location: /legajo?error=' . urlencode('Error al cargar el legajo'));
+            exit;
+        }
+    }
+
     public static function update()
     {
         session_start();
@@ -139,7 +243,12 @@ class LegajoController
         $rolUsuario = $_SESSION['role'] ?? null;
     
         if (!$usuarioActual) {
-            return Response::json(['error' => 'Usuario no autenticado'], 403);
+            header('Location: /login');
+            exit;
+        }
+    
+        if (!in_array($rolUsuario, ['RRHH', 'RECEPCION'])) {
+            return Response::json(['error' => 'No tiene permisos para editar legajos'], 403);
         }
     
         $id = $_POST['id'] ?? null;
@@ -147,43 +256,60 @@ class LegajoController
             return Response::json(['error' => 'ID no proporcionado'], 400);
         }
     
-        $data = [];
+        try {
+            // Obtener el legajo actual para verificar datos
+            $legajoActual = Legajo::findById($id);
+            if (empty($legajoActual)) {
+                return Response::json(['error' => 'Legajo no encontrado'], 404);
+            }
+            $legajoActual = $legajoActual[0];
     
-        switch ($rolUsuario) {
-            case 'RRHH':
-                if (isset($_FILES['subido'])) {
-                    $apellidosNombres = $_POST['apellidos_nombres'] ?? 'Sin_Nombre';
-                    $documentoDescripcion = $_POST['documento_id'] ?? 'Documento';
-                    $data['subido'] = self::uploadFile('subido', $apellidosNombres, $_POST['ejercicio'], $_POST['periodo'], $documentoDescripcion);
-                    $data['subido_usuario'] = $usuarioActual;
-                    $data['subido_hora'] = date('Y-m-d H:i:s');
-                    $data['subido_observacion'] = $_POST['subido_observacion'] ?? '';
-                }
-                break;
+            $data = [];
+            switch ($rolUsuario) {
+                case 'RRHH':
+                    if (isset($_FILES['subido']) && $_FILES['subido']['error'] === UPLOAD_ERR_OK) {
+                        $data['subido'] = self::uploadFile(
+                            'subido', 
+                            $legajoActual['APELLIDOS_NOMBRES'] ?? 'Sin_Nombre',
+                            $legajoActual['EJERCICIO'],
+                            str_pad($legajoActual['PERIODO'], 2, '0', STR_PAD_LEFT),
+                            'Documento_Subido'
+                        );
+                        $data['subido_usuario'] = $usuarioActual;
+                        $data['subido_hora'] = date('Y-m-d H:i:s');
+                        $data['subido_observacion'] = $_POST['subido_observacion'] ?? '';
+                    }
+                    break;
     
-            case 'RECEPCION':
-                if (isset($_POST['fisico'])) {
-                    $data['fisico'] = $_POST['fisico'] ? 1 : 0;
-                    $data['fisico_usuario'] = $usuarioActual;
-                    $data['fisico_hora'] = date('Y-m-d H:i:s');
-                    $data['fisico_observacion'] = $_POST['fisico_observacion'] ?? '';
-                }
-                break;
-        }
+                case 'RECEPCION':
+                    if (isset($_POST['fisico'])) {
+                        $data['fisico'] = $_POST['fisico'] ? 1 : 0;
+                        $data['fisico_usuario'] = $usuarioActual;
+                        $data['fisico_hora'] = date('Y-m-d H:i:s');
+                        $data['fisico_observacion'] = $_POST['fisico_observacion'] ?? '';
+                    }
+                    break;
+            }
     
-        if (empty($data)) {
-            return Response::json(['error' => 'No hay datos para actualizar'], 400);
-        }
+            if (empty($data)) {
+                return Response::json(['error' => 'No hay datos para actualizar'], 400);
+            }
     
-        $result = Legajo::update($id, $data);
+            $result = Legajo::update($id, $data);
     
-        if ($result) {
-            return Response::json(['message' => 'Legajo actualizado correctamente']);
-        } else {
-            return Response::json(['error' => 'Error al actualizar el legajo']);
+            if ($result) {
+                header('Location: /legajo?message=' . urlencode('Legajo actualizado correctamente'));
+                exit;
+            } else {
+                header('Location: /legajo/update/' . $id . '?error=' . urlencode('Error al actualizar el legajo'));
+                exit;
+            }
+        } catch (Exception $e) {
+            error_log("Error en update: " . $e->getMessage());
+            header('Location: /legajo/update/' . $id . '?error=' . urlencode('Error al procesar la actualización'));
+            exit;
         }
     }
-        
 
     private static function uploadFile($inputName, $apellidos_nombres, $ejercicio, $periodo, $documento)
     {
@@ -229,5 +355,15 @@ class LegajoController
             return Response::json(['error' => 'Error al eliminar el legajo.']);
         }
     }
-
+    public static function getDocumentos()
+    {
+        try {
+            $sql = "SELECT ID, DESCRIPCION FROM DOCUMENTOS ORDER BY DESCRIPCION";
+            $result = Database::query($sql);
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error al obtener documentos: " . $e->getMessage());
+            return [];
+        }
+    }
 }

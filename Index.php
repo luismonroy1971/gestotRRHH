@@ -157,6 +157,8 @@ switch ($controller) {
                 // Procesar la actualización del legajo
                 Controllers\LegajoController::update();
             }
+        } elseif ($action === 'simple' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+            Controllers\LegajoController::getAllSimple();
         } elseif ($action === 'delete') {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Eliminar un legajo

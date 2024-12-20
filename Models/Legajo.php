@@ -7,49 +7,89 @@ use Exception; // Añadimos esta línea para importar Exception
 
 class Legajo
 {
+    public static function getAllSimple()
+    {
+        try {
+            // Consulta simple para verificar la existencia de la tabla
+            $checkTable = Database::query("SHOW TABLES LIKE 'LEGAJO'");
+            if (empty($checkTable)) {
+                throw new \Exception("La tabla LEGAJO no existe en la base de datos");
+            }
+    
+            // Consulta principal con error handling mejorado
+            $sql = "SELECT * FROM LEGAJO ORDER BY ID DESC";
+            $result = Database::query($sql);
+            
+            if ($result === false) {
+                throw new \Exception("Error al ejecutar la consulta principal");
+            }
+            
+            // Log del número de registros encontrados
+            $count = count($result);
+            error_log("Número de registros encontrados en LEGAJO: " . $count);
+            
+            return $result;
+        } catch (\Exception $e) {
+            error_log("Error en getAllSimple del modelo Legajo: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     public static function getAll($page = 1, $perPage = 10, $filters = [])
     {
         try {
-            // Construir la consulta base
-            $baseSql = "FROM LEGAJO WHERE 1=1";
+            // Construir la consulta base con JOIN
+            $baseSql = "FROM LEGAJO L 
+                        LEFT JOIN DOCUMENTOS D ON L.DOCUMENTO_ID = D.ID 
+                        WHERE 1=1";
             $params = [];
     
             // Aplicar filtros
             if (!empty($filters['tipo_documento'])) {
-                $baseSql .= " AND TIPO_DOCUMENTO = ?";
+                $baseSql .= " AND L.TIPO_DOCUMENTO = ?";
                 $params[] = $filters['tipo_documento'];
             }
     
             if (!empty($filters['n_documento'])) {
-                $baseSql .= " AND N_DOCUMENTO LIKE ?";
+                $baseSql .= " AND L.N_DOCUMENTO LIKE ?";
                 $params[] = "%{$filters['n_documento']}%";
             }
     
+            if (!empty($filters['apellidos_nombres'])) {
+                $baseSql .= " AND L.APELLIDOS_NOMBRES LIKE ?";
+                $params[] = "%{$filters['apellidos_nombres']}%";
+            }
+    
+            if (!empty($filters['documento'])) {
+                $baseSql .= " AND D.DESCRIPCION = ?";
+                $params[] = $filters['documento'];
+            }
+    
             if (!empty($filters['ejercicio'])) {
-                $baseSql .= " AND EJERCICIO = ?";
+                $baseSql .= " AND L.EJERCICIO = ?";
                 $params[] = $filters['ejercicio'];
             }
     
             if (!empty($filters['periodo'])) {
-                $baseSql .= " AND PERIODO = ?";
+                $baseSql .= " AND L.PERIODO = ?";
                 $params[] = $filters['periodo'];
             }
     
             if (isset($filters['emitido'])) {
-                $baseSql .= $filters['emitido'] ? " AND EMITIDO IS NOT NULL" : " AND EMITIDO IS NULL";
+                $baseSql .= $filters['emitido'] ? " AND L.EMITIDO IS NOT NULL" : " AND L.EMITIDO IS NULL";
             }
     
             if (isset($filters['subido'])) {
-                $baseSql .= $filters['subido'] ? " AND SUBIDO IS NOT NULL" : " AND SUBIDO IS NULL";
+                $baseSql .= $filters['subido'] ? " AND L.SUBIDO IS NOT NULL" : " AND L.SUBIDO IS NULL";
             }
     
             if (isset($filters['fisico'])) {
-                $baseSql .= " AND FISICO = ?";
-                $params[] = $filters['fisico'];
+                $baseSql .= " AND L.FISICO = ?";
+                $params[] = $filters['fisico'] ? 1 : 0;
             }
     
             // Contar total de registros
-            $countSql = "SELECT COUNT(*) as total " . $baseSql;
+            $countSql = "SELECT COUNT(DISTINCT L.ID) as total " . $baseSql;
             $totalResult = Database::query($countSql, $params);
             $total = (int)$totalResult[0]['total'];
     
@@ -58,13 +98,8 @@ class Legajo
             $offset = ($page - 1) * $perPage;
     
             // Consulta principal con paginación
-            $mainSql = "SELECT * " . $baseSql . " ORDER BY ID DESC";
-            if ($perPage > 0) {
-                $mainSql .= " LIMIT " . (int)$perPage;
-                if ($offset > 0) {
-                    $mainSql .= " OFFSET " . (int)$offset;
-                }
-            }
+            $mainSql = "SELECT L.*, D.DESCRIPCION as DOCUMENTO_DESCRIPCION " . $baseSql . 
+                       " ORDER BY L.ID DESC LIMIT " . (int)$offset . ", " . (int)$perPage;
     
             $data = Database::query($mainSql, $params);
     
@@ -77,13 +112,36 @@ class Legajo
             ];
         } catch (Exception $e) {
             error_log("Error in getAll: " . $e->getMessage());
-            throw $e;
+            return [
+                'data' => [],
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => 0,
+                'pages' => 0
+            ];
         }
     }
-
     public static function findById($id)
     {
-        return Database::query("SELECT * FROM LEGAJO WHERE ID = ?", [$id]);
+        try {
+            error_log("Buscando legajo con ID: " . $id);
+            $sql = "SELECT * FROM LEGAJO WHERE ID = ?";
+            error_log("SQL Query: " . $sql);
+            
+            $result = Database::query($sql, [$id]);
+            error_log("Resultado de la consulta: " . print_r($result, true));
+            
+            if (empty($result)) {
+                error_log("No se encontró legajo con ID: " . $id);
+                return null;
+            }
+            
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error en findById: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
+        }
     }
 
     public static function create($data)
@@ -173,27 +231,38 @@ class Legajo
 
     public static function update($id, $data)
     {
-        // Construir la consulta SQL dinámicamente basada en los campos proporcionados
-        $setClauses = [];
-        $params = [];
-        
-        foreach ($data as $key => $value) {
-            if ($value !== null) {
-                $setClauses[] = strtoupper($key) . " = ?";
-                $params[] = $value;
+        try {
+            // Verificar que el legajo existe
+            $existingLegajo = self::findById($id);
+            if (empty($existingLegajo)) {
+                throw new Exception("Legajo no encontrado");
             }
-        }
-        
-        if (empty($setClauses)) {
+    
+            // Construir la consulta SQL dinámicamente
+            $setClauses = [];
+            $params = [];
+            
+            foreach ($data as $key => $value) {
+                if ($value !== null) {
+                    $setClauses[] = strtoupper($key) . " = ?";
+                    $params[] = $value;
+                }
+            }
+            
+            if (empty($setClauses)) {
+                return false;
+            }
+            
+            // Agregar el ID al final de los parámetros
+            $params[] = $id;
+            
+            $sql = "UPDATE LEGAJO SET " . implode(", ", $setClauses) . " WHERE ID = ?";
+            
+            return Database::update($sql, $params);
+        } catch (Exception $e) {
+            error_log("Error updating legajo: " . $e->getMessage());
             return false;
         }
-        
-        // Agregar el ID al final de los parámetros
-        $params[] = $id;
-        
-        $sql = "UPDATE LEGAJO SET " . implode(", ", $setClauses) . " WHERE ID = ?";
-        
-        return Database::update($sql, $params);
     }
     
 

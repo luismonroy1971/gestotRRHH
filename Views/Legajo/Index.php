@@ -96,7 +96,7 @@
 
         .filters {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             gap: 0.5rem;
             margin-bottom: 1.5rem;
         }
@@ -286,7 +286,15 @@
                     <label for="apellidosNombres">Apellidos y Nombres</label>
                     <input type="text" id="apellidosNombres" placeholder="Buscar...">
                 </div>
-
+                <div class="filter-group">
+                    <label for="documento">Documento</label>
+                    <select id="documento" name="documento">
+                        <option value="">Todos</option>
+                        <?php foreach (Controllers\LegajoController::getDocumentos() as $doc): ?>
+                            <option value="<?= htmlspecialchars($doc['ID']) ?>"><?= htmlspecialchars($doc['DESCRIPCION']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
                 <div class="filter-group">
                     <label for="ejercicio">Ejercicio</label>
                     <select id="ejercicio">
@@ -362,6 +370,7 @@
                             <th>Tipo Documento</th>
                             <th>Número Documento</th>
                             <th>Apellidos y Nombres</th>
+                            <th>Documento</th>
                             <th>Ejercicio</th>
                             <th>Periodo</th>
                             <th>Emitido</th>
@@ -424,6 +433,7 @@
         tipoDocumento: document.getElementById('tipoDocumento'),
         numeroDocumento: document.getElementById('numeroDocumento'),
         apellidosNombres: document.getElementById('apellidosNombres'),
+        documento: document.getElementById('documento'),
         ejercicio: document.getElementById('ejercicio'),
         periodo: document.getElementById('periodo'),
         emitido: document.getElementById('emitido'),
@@ -441,6 +451,45 @@
         return meses[numero] || '-';
     }
 
+    // Función para renderizar la tabla
+    function renderTable() {
+        tableBody.innerHTML = '';
+
+        if (!legajos || legajos.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center;">No hay registros disponibles.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        legajos.forEach(legajo => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${legajo.ID}</td>
+                <td>${legajo.TIPO_DOCUMENTO === 1 ? 'DNI' : 'CE'}</td>
+                <td>${legajo.N_DOCUMENTO}</td>
+                <td>${legajo.APELLIDOS_NOMBRES || '-'}</td>
+                <td>${legajo.DOCUMENTO_DESCRIPCION || '-'}</td>
+                <td>${legajo.EJERCICIO}</td>
+                <td>${getNombreMes(legajo.PERIODO)}</td>
+                <td>${legajo.EMITIDO ? 
+                    `<a href="${legajo.EMITIDO}" class="view-link" target="_blank">Ver</a>` : 
+                    '-'}</td>
+                <td>${legajo.SUBIDO ? 
+                    `<a href="${legajo.SUBIDO}" class="view-link" target="_blank">Ver</a>` : 
+                    '-'}</td>
+                <td>${legajo.FISICO == 1 ? 'Sí' : 'No'}</td>
+                <td class="action-buttons">
+                    <a href="/legajo/update/${legajo.ID}" class="edit-button">Editar</a>
+                    <button onclick="deleteLegajo(${legajo.ID})" class="delete-button">Eliminar</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
     // Función para cargar datos
     async function loadData() {
         const filterParams = new URLSearchParams({
@@ -449,6 +498,7 @@
             tipo_documento: filters.tipoDocumento.value,
             n_documento: filters.numeroDocumento.value,
             apellidos_nombres: filters.apellidosNombres.value,
+            documento: filters.documento.value,  // Cambiado de documento_id a documento
             ejercicio: filters.ejercicio.value,
             periodo: filters.periodo.value,
             emitido: filters.emitido.value,
@@ -461,12 +511,11 @@
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                credentials: 'same-origin' // Incluir cookies en la petición
+                credentials: 'same-origin'
             });
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    // Si no está autenticado, redirigir al login
                     window.location.href = '/login';
                     return;
                 }
@@ -474,12 +523,14 @@
             }
 
             const result = await response.json();
+            
             if (result && result.data) {
                 legajos = result.data;
                 totalPages = result.pages || 1;
                 renderTable();
                 updatePaginationControls();
             } else {
+                console.error('Formato de respuesta inválido:', result);
                 throw new Error('Formato de respuesta inválido');
             }
         } catch (error) {
@@ -487,51 +538,12 @@
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="10" style="text-align: center; color: red;">
-                        Error al cargar los datos. Por favor, recargue la página.
+                        Error al cargar los datos. Por favor, intente nuevamente.
                     </td>
                 </tr>
             `;
         }
     }
-
-    // Función para renderizar la tabla
-    function renderTable() {
-        tableBody.innerHTML = '';
-
-        if (legajos.length === 0) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="10" style="text-align: center;">No hay registros disponibles.</td>
-                </tr>
-            `;
-            return;
-        }
-
-        legajos.forEach(legajo => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${legajo.id}</td>
-                <td>${legajo.tipo_documento === '1' ? 'DNI' : 'CE'}</td>
-                <td>${legajo.n_documento}</td>
-                <td>${legajo.apellidos_nombres || '-'}</td>
-                <td>${legajo.ejercicio}</td>
-                <td>${getNombreMes(legajo.periodo)}</td>
-                <td>${legajo.emitido ? 
-                    `<a href="${legajo.emitido}" class="view-link" target="_blank">Ver</a>` : 
-                    '-'}</td>
-                <td>${legajo.subido ? 
-                    `<a href="${legajo.subido}" class="view-link" target="_blank">Ver</a>` : 
-                    '-'}</td>
-                <td>${legajo.fisico === 1 ? 'Si' : 'No'}</td>
-                <td class="action-buttons">
-                    <a href="/legajo/update/${legajo.id}" class="edit-button">Editar</a>
-                    <button onclick="deleteLegajo(${legajo.id})" class="delete-button">Eliminar</button>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-    }
-
     // Función para actualizar controles de paginación
     function updatePaginationControls() {
         totalPagesSpan.textContent = totalPages;
