@@ -96,8 +96,8 @@
 
         .filters {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.5rem;
             margin-bottom: 1.5rem;
         }
 
@@ -264,7 +264,9 @@
                 <div class="alert error"><?= htmlspecialchars($_GET['error']) ?></div>
             <?php endif; ?>
 
-            <a href="/legajo/create" class="add-button">Agregar Nuevo Legajo</a>
+            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'NOMINAS'): ?>
+                <a href="/legajo/create" class="add-button">Agregar Nuevo Legajo</a>
+            <?php endif; ?>
 
             <div class="filters">
                 <div class="filter-group">
@@ -280,13 +282,28 @@
                     <label for="numeroDocumento">Número Documento</label>
                     <input type="text" id="numeroDocumento" placeholder="Buscar...">
                 </div>
+                <div class="filter-group">
+                    <label for="apellidosNombres">Apellidos y Nombres</label>
+                    <input type="text" id="apellidosNombres" placeholder="Buscar...">
+                </div>
 
                 <div class="filter-group">
                     <label for="ejercicio">Ejercicio</label>
                     <select id="ejercicio">
                         <option value="">Todos</option>
+                        <option value="2014">2014</option>
+                        <option value="2015">2015</option>
+                        <option value="2016">2016</option>
+                        <option value="2017">2017</option>
+                        <option value="2018">2018</option>
+                        <option value="2019">2019</option>
+                        <option value="2020">2020</option>
+                        <option value="2021">2021</option>
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
                         <option value="2024">2024</option>
                         <option value="2025">2025</option>
+
                     </select>
                 </div>
 
@@ -406,6 +423,7 @@
     const filters = {
         tipoDocumento: document.getElementById('tipoDocumento'),
         numeroDocumento: document.getElementById('numeroDocumento'),
+        apellidosNombres: document.getElementById('apellidosNombres'),
         ejercicio: document.getElementById('ejercicio'),
         periodo: document.getElementById('periodo'),
         emitido: document.getElementById('emitido'),
@@ -430,6 +448,7 @@
             per_page: perPage,
             tipo_documento: filters.tipoDocumento.value,
             n_documento: filters.numeroDocumento.value,
+            apellidos_nombres: filters.apellidosNombres.value,
             ejercicio: filters.ejercicio.value,
             periodo: filters.periodo.value,
             emitido: filters.emitido.value,
@@ -438,14 +457,40 @@
         });
 
         try {
-            const response = await fetch(`/legajo/api?${filterParams.toString()}`);
+            const response = await fetch(`/legajo/api?${filterParams.toString()}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin' // Incluir cookies en la petición
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Si no está autenticado, redirigir al login
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
             const result = await response.json();
-            legajos = result.data;
-            totalPages = result.pages;
-            renderTable();
-            updatePaginationControls();
+            if (result && result.data) {
+                legajos = result.data;
+                totalPages = result.pages || 1;
+                renderTable();
+                updatePaginationControls();
+            } else {
+                throw new Error('Formato de respuesta inválido');
+            }
         } catch (error) {
             console.error('Error al cargar datos:', error);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; color: red;">
+                        Error al cargar los datos. Por favor, recargue la página.
+                    </td>
+                </tr>
+            `;
         }
     }
 
@@ -579,6 +624,14 @@
 
         // Para el campo de número de documento, filtrar mientras se escribe
         if (filter === filters.numeroDocumento) {
+            filter.addEventListener('keyup', () => {
+                currentPage = 1;
+                loadData();
+            });
+        }
+
+        // Para el campo de apelldos y nombres, filtrar mientras se escribe
+        if (filter === filters.apellidosNombres) {
             filter.addEventListener('keyup', () => {
                 currentPage = 1;
                 loadData();

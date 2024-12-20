@@ -62,9 +62,72 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
             margin-bottom: 2rem;
             transition: background-color 0.2s; 
         }
+        /* Estilos para el modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal-error {
+            color: #dc2626;
+            margin-bottom: 20px;
+        }
+
+        .modal-button {
+            background-color: #dc2626;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal-button:hover {
+            background-color: #b91c1c;
+        }
+
+        /* Estilos para mensaje de alerta */
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+            display: none;
+        }
+
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
     </style>
 </head>
 <body>
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #dc2626; margin-bottom: 1rem;">Error</h2>
+            <p id="errorMessage" class="modal-error"></p>
+            <button onclick="closeErrorModal()" class="modal-button">Aceptar</button>
+        </div>
+    </div>
     <!-- Barra Superior -->
     <div class="top-bar">
         <a href="/legajo">← Retornar Gestión de Legajos</a>
@@ -72,8 +135,10 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
     </div>
 
     <div class="container">
+        <!-- Alerta para mensajes de error -->
+        <div id="alertMessage" class="alert alert-error"></div>
         <h1>Agregar Legajo</h1>
-        <form action="/legajo/create" method="POST" enctype="multipart/form-data">
+        <form id="legajoForm" onsubmit="return submitForm(event)" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="tipo_documento">Tipo Documento</label>
                 <select name="tipo_documento" id="tipo_documento" required>
@@ -91,7 +156,7 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
 
             <div class="form-group">
                 <label for="apellidos_nombres">Apellidos y Nombres</label>
-                <input type="text" name="apellidos_nombres" id="apellidos_nombres" disabled>
+                <input type="text" name="apellidos_nombres" id="apellidos_nombres" readonly>
             </div>
 
             <!-- Campos comunes -->
@@ -102,6 +167,16 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
             <div class="form-group">
                 <label for="ejercicio">Ejercicio</label>
                 <select name="ejercicio" id="ejercicio" required>
+                    <option value="2014">2014</option>
+                    <option value="2015">2015</option>
+                    <option value="2016">2016</option>
+                    <option value="2017">2017</option>
+                    <option value="2018">2018</option>
+                    <option value="2019">2019</option>
+                    <option value="2020">2020</option>
+                    <option value="2021">2021</option>
+                    <option value="2022">2022</option>
+                    <option value="2023">2023</option>
                     <option value="2024">2024</option>
                     <option value="2025">2025</option>
                 </select>
@@ -157,6 +232,53 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
     </div>
 
     <script>
+        // Función para mostrar el modal de error
+        async function submitForm(event) {
+            event.preventDefault(); // Esto es crucial - detiene el envío tradicional del formulario
+            
+            const form = document.getElementById('legajoForm');
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/legajo/create', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Mostrar el modal con el mensaje de error
+                    showErrorModal(result.error || 'Error al crear el legajo');
+                    return false;
+                }
+
+                // Si todo sale bien, redirigir a la lista de legajos
+                window.location.href = '/legajo';
+                return false;
+            } catch (error) {
+                showErrorModal('Error al procesar la solicitud');
+                console.error(error);
+                return false;
+            }
+        }
+
+        function showErrorModal(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorModal').style.display = 'block';
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').style.display = 'none';
+        }
+
+        // Cerrar el modal si se hace clic fuera de él
+        window.onclick = function(event) {
+            const modal = document.getElementById('errorModal');
+            if (event.target == modal) {
+                closeErrorModal();
+            }
+        }
         async function buscarNombre() {
             const tipoDocumento = document.getElementById("tipo_documento").value;
             const nDocumento = document.getElementById("n_documento").value;
@@ -167,11 +289,11 @@ $rolUsuario = $_SESSION['role'] ?? 'INVITADO';
                 if (result.data && result.data.length > 0) {
                     document.getElementById("apellidos_nombres").value = result.data[0].APELLIDOS_NOMBRES;
                 } else {
-                    alert("No existe trabajador con ese documento.");
+                    showErrorModal("No existe trabajador con ese documento.");
                     document.getElementById("apellidos_nombres").value = "";
                 }
             } catch (error) {
-                alert("Error al consultar nombre.");
+                showErrorModal("Error al consultar nombre.");
                 console.error(error);
             }
         }
