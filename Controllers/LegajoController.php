@@ -64,11 +64,12 @@ class LegajoController
                     'tipo_documento' => $_GET['tipo_documento'] ?? null,
                     'n_documento' => $_GET['n_documento'] ?? null,
                     'apellidos_nombres' => $_GET['apellidos_nombres'] ?? null,
+                    'documento' => $_GET['documento'] ?? null,  // Este es el ID del documento
                     'ejercicio' => $_GET['ejercicio'] ?? null,
                     'periodo' => $_GET['periodo'] ?? null,
                     'emitido' => isset($_GET['emitido']) && $_GET['emitido'] !== '' ? $_GET['emitido'] === '1' : null,
                     'subido' => isset($_GET['subido']) && $_GET['subido'] !== '' ? $_GET['subido'] === '1' : null,
-                    'fisico' => isset($_GET['fisico']) && $_GET['fisico'] !== '' ? $_GET['fisico'] === '1' : null
+                    'fisico' => isset($_GET['fisico']) && $_GET['fisico'] !== '' ? intval($_GET['fisico']) : null
                 ];
     
                 // Eliminar filtros vacíos

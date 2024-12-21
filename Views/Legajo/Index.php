@@ -96,7 +96,7 @@
 
         .filters {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 0.5rem;
             margin-bottom: 1.5rem;
         }
@@ -480,7 +480,7 @@
                 <td>${legajo.SUBIDO ? 
                     `<a href="${legajo.SUBIDO}" class="view-link" target="_blank">Ver</a>` : 
                     '-'}</td>
-                <td>${legajo.FISICO == 1 ? 'Sí' : 'No'}</td>
+                <td>${legajo.FISICO == 1 ? 'Si' : 'No'}</td>
                 <td class="action-buttons">
                     <a href="/legajo/update/${legajo.ID}" class="edit-button">Editar</a>
                     <button onclick="deleteLegajo(${legajo.ID})" class="delete-button">Eliminar</button>
@@ -505,6 +505,8 @@
             subido: filters.subido.value,
             fisico: filters.fisico.value
         });
+
+        console.log("Valor del filtro físico enviado:", filters.fisico.value);
 
         try {
             const response = await fetch(`/legajo/api?${filterParams.toString()}`, {
