@@ -164,6 +164,9 @@ switch ($controller) {
                 // Eliminar un legajo
                 Controllers\LegajoController::delete();
             }
+        } elseif ($action === 'edit' && isset($id)) {
+            // Mostrar la vista de edición
+            Controllers\LegajoController::edit($id);
         } else {
             // Ruta no encontrada
             http_response_code(404);

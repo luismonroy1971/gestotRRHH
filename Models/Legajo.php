@@ -37,107 +37,110 @@ class Legajo
 
 
     public static function getAll($page = 1, $perPage = 10, $filters = [])
-{
-    try {
-        // Construir la consulta base con JOIN para obtener las descripciones
-        $baseSql = "FROM LEGAJO L 
-                    LEFT JOIN DOCUMENTOS D ON L.DOCUMENTO_ID = D.ID 
-                    WHERE 1=1";
-        $params = [];
+    {
+        try {
+            // Construir la consulta base con JOIN para obtener las descripciones
+            $baseSql = "FROM LEGAJO L 
+                        LEFT JOIN DOCUMENTOS D ON L.DOCUMENTO_ID = D.ID 
+                        WHERE 1=1";
+            $params = [];
 
-        // Aplicar filtros
-        if (!empty($filters['tipo_documento'])) {
-            $baseSql .= " AND L.TIPO_DOCUMENTO = ?";
-            $params[] = $filters['tipo_documento'];
-        }
-
-        if (!empty($filters['n_documento'])) {
-            $baseSql .= " AND L.N_DOCUMENTO LIKE ?";
-            $params[] = "%{$filters['n_documento']}%";
-        }
-
-        if (!empty($filters['apellidos_nombres'])) {
-            $baseSql .= " AND L.APELLIDOS_NOMBRES LIKE ?";
-            $params[] = "%{$filters['apellidos_nombres']}%";
-        }
-
-        // Filtro por ID del documento (cambiado de descripción a ID)
-        if (!empty($filters['documento'])) {
-            $baseSql .= " AND L.DOCUMENTO_ID = ?";
-            $params[] = $filters['documento'];
-        }
-
-        if (!empty($filters['ejercicio'])) {
-            $baseSql .= " AND L.EJERCICIO = ?";
-            $params[] = $filters['ejercicio'];
-        }
-
-        if (!empty($filters['periodo'])) {
-            $baseSql .= " AND L.PERIODO = ?";
-            $params[] = $filters['periodo'];
-        }
-
-        if (isset($filters['emitido']) && $filters['emitido'] !== '') {
-            $baseSql .= $filters['emitido'] ? " AND L.EMITIDO IS NOT NULL" : " AND L.EMITIDO IS NULL";
-        }
-
-        if (isset($filters['subido']) && $filters['subido'] !== '') {
-            $baseSql .= $filters['subido'] ? " AND L.SUBIDO IS NOT NULL" : " AND L.SUBIDO IS NULL";
-        }
-
-       // Ajuste para el filtro FISICO
-        if (isset($filters['fisico']) && $filters['fisico'] !== '') {
-            error_log("Aplicando filtro FISICO. Valor recibido: " . $filters['fisico']);
-            
-            // Convertir a número para asegurar comparación correcta
-            $fisicoValue = intval($filters['fisico']);
-            
-            if ($fisicoValue === 0) {
-                $baseSql .= " AND (L.FISICO = 0 OR L.FISICO IS NULL)";
-            } elseif ($fisicoValue === 1) {
-                $baseSql .= " AND L.FISICO = 1";
+            // Aplicar filtros
+            if (!empty($filters['tipo_documento'])) {
+                $baseSql .= " AND L.TIPO_DOCUMENTO = ?";
+                $params[] = $filters['tipo_documento'];
             }
-            error_log("SQL después de filtro FISICO: " . $baseSql);
+
+            if (!empty($filters['n_documento'])) {
+                $baseSql .= " AND L.N_DOCUMENTO LIKE ?";
+                $params[] = "%{$filters['n_documento']}%";
+            }
+
+            if (!empty($filters['apellidos_nombres'])) {
+                $baseSql .= " AND L.APELLIDOS_NOMBRES LIKE ?";
+                $params[] = "%{$filters['apellidos_nombres']}%";
+            }
+
+            // Filtro por ID del documento (cambiado de descripción a ID)
+            if (!empty($filters['documento'])) {
+                $baseSql .= " AND L.DOCUMENTO_ID = ?";
+                $params[] = $filters['documento'];
+            }
+
+            if (!empty($filters['ejercicio'])) {
+                $baseSql .= " AND L.EJERCICIO = ?";
+                $params[] = $filters['ejercicio'];
+            }
+
+            if (!empty($filters['periodo'])) {
+                $baseSql .= " AND L.PERIODO = ?";
+                $params[] = $filters['periodo'];
+            }
+
+            if (isset($filters['emitido']) && $filters['emitido'] !== '') {
+                $baseSql .= $filters['emitido'] ? " AND L.EMITIDO IS NOT NULL" : " AND L.EMITIDO IS NULL";
+            }
+
+            if (isset($filters['subido']) && $filters['subido'] !== '') {
+                $baseSql .= $filters['subido'] ? " AND L.SUBIDO IS NOT NULL" : " AND L.SUBIDO IS NULL";
+            }
+
+        // Ajuste para el filtro FISICO
+            if (isset($filters['fisico']) && $filters['fisico'] !== '') {
+                error_log("Aplicando filtro FISICO. Valor recibido: " . $filters['fisico']);
+                
+                // Convertir a número para asegurar comparación correcta
+                $fisicoValue = intval($filters['fisico']);
+                
+                if ($fisicoValue === 0) {
+                    $baseSql .= " AND (L.FISICO = 0 OR L.FISICO IS NULL)";
+                } elseif ($fisicoValue === 1) {
+                    $baseSql .= " AND L.FISICO = 1";
+                }
+                error_log("SQL después de filtro FISICO: " . $baseSql);
+            }
+
+            // Contar total de registros
+            $countSql = "SELECT COUNT(DISTINCT L.ID) as total " . $baseSql;
+            $totalResult = Database::query($countSql, $params);
+            $total = (int)$totalResult[0]['total'];
+
+            // Calcular paginación
+            $totalPages = ceil($total / $perPage);
+            $offset = ($page - 1) * $perPage;
+
+            // Consulta principal con paginación y selección de campos necesarios
+            $mainSql = "SELECT L.*, D.DESCRIPCION as DOCUMENTO_DESCRIPCION " . $baseSql . 
+                    " ORDER BY L.ID DESC LIMIT " . (int)$offset . ", " . (int)$perPage;
+
+            $data = Database::query($mainSql, $params);
+
+            return [
+                'data' => $data,
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'pages' => $totalPages
+            ];
+        } catch (Exception $e) {
+            error_log("Error in getAll: " . $e->getMessage());
+            return [
+                'data' => [],
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => 0,
+                'pages' => 0
+            ];
         }
-
-        // Contar total de registros
-        $countSql = "SELECT COUNT(DISTINCT L.ID) as total " . $baseSql;
-        $totalResult = Database::query($countSql, $params);
-        $total = (int)$totalResult[0]['total'];
-
-        // Calcular paginación
-        $totalPages = ceil($total / $perPage);
-        $offset = ($page - 1) * $perPage;
-
-        // Consulta principal con paginación y selección de campos necesarios
-        $mainSql = "SELECT L.*, D.DESCRIPCION as DOCUMENTO_DESCRIPCION " . $baseSql . 
-                   " ORDER BY L.ID DESC LIMIT " . (int)$offset . ", " . (int)$perPage;
-
-        $data = Database::query($mainSql, $params);
-
-        return [
-            'data' => $data,
-            'page' => $page,
-            'per_page' => $perPage,
-            'total' => $total,
-            'pages' => $totalPages
-        ];
-    } catch (Exception $e) {
-        error_log("Error in getAll: " . $e->getMessage());
-        return [
-            'data' => [],
-            'page' => $page,
-            'per_page' => $perPage,
-            'total' => 0,
-            'pages' => 0
-        ];
     }
-}
     public static function findById($id)
     {
         try {
             error_log("Buscando legajo con ID: " . $id);
-            $sql = "SELECT * FROM LEGAJO WHERE ID = ?";
+            $sql = "SELECT L.*, D.DESCRIPCION as DOCUMENTO_DESCRIPCION 
+                    FROM LEGAJO L 
+                    LEFT JOIN DOCUMENTOS D ON L.DOCUMENTO_ID = D.ID 
+                    WHERE L.ID = ?";
             error_log("SQL Query: " . $sql);
             
             $result = Database::query($sql, [$id]);

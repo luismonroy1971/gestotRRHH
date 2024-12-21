@@ -277,17 +277,23 @@ if (!isset($documentoDescripcion)) {
             });
 
             const result = await response.json();
-
+            
             if (!response.ok) {
                 showErrorModal(result.error || 'Error al actualizar el legajo');
                 return false;
             }
 
-            window.location.href = '/legajo?message=Legajo actualizado correctamente';
+            if (result.success) {
+                // Redirigir solo si la actualización fue exitosa
+                window.location.href = '/legajo?message=' + encodeURIComponent(result.message);
+            } else {
+                showErrorModal(result.error || 'Error al actualizar el legajo');
+            }
+
             return false;
         } catch (error) {
+            console.error('Error:', error);
             showErrorModal('Error al procesar la solicitud');
-            console.error(error);
             return false;
         }
     }

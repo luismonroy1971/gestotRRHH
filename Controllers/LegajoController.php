@@ -244,8 +244,7 @@ class LegajoController
         $rolUsuario = $_SESSION['role'] ?? null;
     
         if (!$usuarioActual) {
-            header('Location: /login');
-            exit;
+            return Response::json(['error' => 'Usuario no autenticado'], 401);
         }
     
         if (!in_array($rolUsuario, ['RRHH', 'RECEPCION'])) {
@@ -258,7 +257,7 @@ class LegajoController
         }
     
         try {
-            // Obtener el legajo actual para verificar datos
+            // Obtener el legajo actual
             $legajoActual = Legajo::findById($id);
             if (empty($legajoActual)) {
                 return Response::json(['error' => 'Legajo no encontrado'], 404);
@@ -299,16 +298,13 @@ class LegajoController
             $result = Legajo::update($id, $data);
     
             if ($result) {
-                header('Location: /legajo?message=' . urlencode('Legajo actualizado correctamente'));
-                exit;
+                return Response::json(['success' => true, 'message' => 'Legajo actualizado correctamente']);
             } else {
-                header('Location: /legajo/update/' . $id . '?error=' . urlencode('Error al actualizar el legajo'));
-                exit;
+                return Response::json(['error' => 'Error al actualizar el legajo'], 500);
             }
         } catch (Exception $e) {
             error_log("Error en update: " . $e->getMessage());
-            header('Location: /legajo/update/' . $id . '?error=' . urlencode('Error al procesar la actualización'));
-            exit;
+            return Response::json(['error' => 'Error al procesar la actualización: ' . $e->getMessage()], 500);
         }
     }
 

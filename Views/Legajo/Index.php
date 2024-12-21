@@ -257,11 +257,23 @@
             <h1>Gestión de Legajos</h1>
 
             <?php if (isset($_GET['message'])): ?>
-                <div class="alert success"><?= htmlspecialchars($_GET['message']) ?></div>
+                <div class="alert success" id="alert-success"><?= htmlspecialchars($_GET['message']) ?></div>
+                <script>
+                    // Ocultar el mensaje después de 3 segundos
+                    setTimeout(function() {
+                        document.getElementById('alert-success').style.display = 'none';
+                    }, 2000);
+                </script>
             <?php endif; ?>
 
             <?php if (isset($_GET['error'])): ?>
-                <div class="alert error"><?= htmlspecialchars($_GET['error']) ?></div>
+                <div class="alert error" id="alert-error"><?= htmlspecialchars($_GET['error']) ?></div>
+                <script>
+                    // Ocultar el mensaje después de 3 segundos
+                    setTimeout(function() {
+                        document.getElementById('alert-error').style.display = 'none';
+                    }, 2000);
+                </script>
             <?php endif; ?>
 
             <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'NOMINAS'): ?>
@@ -482,7 +494,7 @@
                     '-'}</td>
                 <td>${legajo.FISICO == 1 ? 'Si' : 'No'}</td>
                 <td class="action-buttons">
-                    <a href="/legajo/update/${legajo.ID}" class="edit-button">Editar</a>
+                    <a href="/legajo/edit/${legajo.ID}" class="edit-button">Editar</a>
                     <button onclick="deleteLegajo(${legajo.ID})" class="delete-button">Eliminar</button>
                 </td>
             `;
